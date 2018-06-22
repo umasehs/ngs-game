@@ -74,11 +74,15 @@ const styles = theme => ({
 });
 
 class App extends Component {
-  state = {
-    mobileOpen: false,
-    a2hsPrompt: false,
-    deferredPrompt: null
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      mobileOpen: false,
+      a2hsPrompt: false,
+      deferredPrompt: null
+    };
+    LoadablePhaserContainer.preload();
+  }
 
   addToHomeScreen = () => {
     // Hide our user interface that shows our A2HS button
