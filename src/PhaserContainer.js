@@ -1,14 +1,32 @@
-import React from "react";
+import React, { Component } from "react";
 import Phaser from "phaser";
+import PropTypes from "prop-types";
+import { withStyles } from "@material-ui/core/styles";
 import happy from "./happy.svg";
 import sad from "./sad.svg";
 import happyPart from "./happyPart.svg";
 import sadPart from "./sadPart.svg";
 
-const w = window.innerWidth;
-const h = window.innerHeight;
-class PhaserContainer extends React.Component {
+const styles = () => ({
+  root: {
+    height: "90%"
+  }
+});
+
+class PhaserContainer extends Component {
+  constructor(props) {
+    super(props);
+    this.divElement = React.createRef();
+    this.state = { game: null };
+  }
+
+  componentWillUnmount() {
+    this.state.game.destroy(true);
+  }
+
   componentDidMount() {
+    const w = this.divElement.current.clientWidth;
+    const h = this.divElement.current.clientHeight;
     // The game will be configured with these settings:
     const config = {
       type: Phaser.AUTO,
@@ -29,8 +47,7 @@ class PhaserContainer extends React.Component {
       parent: "phaser-container"
     };
 
-    const game = new Phaser.Game(config);
-    console.log(game);
+    this.setState({ game: new Phaser.Game(config) });
 
     // game state details (loading, scoring, etc.)
     let gameStarted = false;
@@ -40,6 +57,10 @@ class PhaserContainer extends React.Component {
     const INIT_LIVES = 3;
     let lives = INIT_LIVES;
     let loadingLabel, scoreLabel, livesLabel;
+    const SCORE_LOCATION = { x: 10, y: 10 };
+    const LIVES_LOCATION = { x: 10, y: 30 };
+    const LOADING_LOCATION = { x: 100, y: 70 };
+    const LABEL_FILL = "white";
 
     // lines drawn by mouse/touch
     let s;
@@ -79,7 +100,14 @@ class PhaserContainer extends React.Component {
       // since JavaScript is dynamically typed,
       // we should populate our arrays to save time
       for (let i = 0; i < 10; i++) {
-        lines.push(new Phaser.Geom.Line(0, 0, 0, 0));
+        lines.push(
+          new Phaser.Geom.Line(
+            LOADING_LOCATION.x,
+            LOADING_LOCATION.y,
+            LOADING_LOCATION.x,
+            LOADING_LOCATION.y
+          )
+        );
       }
       goodObjects = physics.add.group({
         key: "goodObject",
@@ -110,7 +138,10 @@ class PhaserContainer extends React.Component {
       this.input.on("pointerdown", function(pointer) {
         if (pointer.leftButtonDown()) {
           leftButtonDown = true;
-          s = new Phaser.Geom.Point(pointer.x, pointer.y);
+          s = {
+            x: pointer.x,
+            y: pointer.y
+          };
 
           // on the first click after the game has loaded,
           // relaunch the objects and clear any old lines
@@ -167,7 +198,10 @@ class PhaserContainer extends React.Component {
           });
         }
 
-        s = new Phaser.Geom.Point(pointer.x, pointer.y);
+        s = {
+          x: pointer.x,
+          y: pointer.y
+        };
 
         // before game starts, the initial array of lines should be kept up-to-date
         if (!gameStarted) {
@@ -176,21 +210,33 @@ class PhaserContainer extends React.Component {
         }
       });
 
-      scoreLabel = this.add.text(10, 10, "Tip: Get the happy ones!");
-      scoreLabel.setFill("white");
+      scoreLabel = this.add.text(
+        SCORE_LOCATION.x,
+        SCORE_LOCATION.y,
+        "Tip: Get the happy ones!"
+      );
+      scoreLabel.setFill(LABEL_FILL);
 
-      livesLabel = this.add.text(10, 30, `Lives remaining: ${lives}`);
-      livesLabel.setFill("white");
+      livesLabel = this.add.text(
+        LIVES_LOCATION.x,
+        LIVES_LOCATION.y,
+        `Lives remaining: ${lives}`
+      );
+      livesLabel.setFill(LABEL_FILL);
 
-      loadingLabel = this.add.text(w * 0.25, 80, "Loading...");
-      loadingLabel.setFill("white");
+      loadingLabel = this.add.text(
+        LOADING_LOCATION.x,
+        LOADING_LOCATION.y,
+        "Loading..."
+      );
+      loadingLabel.setFill(LABEL_FILL);
 
       // give the physics engine some time to warm up
       time.addEvent({
         delay: LOAD_TIME,
         callback: () => {
           loaded = true;
-          loadingLabel.setText("Click to start!");
+          loadingLabel.setText("Click HERE to start!");
         }
       });
     }
@@ -450,8 +496,18 @@ class PhaserContainer extends React.Component {
 
   // Phaser game rendered within HTML div
   render() {
-    return <div className="phaserContainer" id="phaser-container" />;
+    return (
+      <div
+        className={this.props.classes.root}
+        id="phaser-container"
+        ref={this.divElement}
+      />
+    );
   }
 }
 
-export default PhaserContainer;
+PhaserContainer.propTypes = {
+  classes: PropTypes.object.isRequired
+};
+
+export default withStyles(styles)(PhaserContainer);

@@ -4,9 +4,12 @@
   "private": true,
   "homepage": "http://umasehs.github.io/ngs-game",
   "dependencies": {
+    "@material-ui/core": "^1.2.3",
+    "@material-ui/icons": "^1.1.0",
     "phaser": "^3.10.1",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
+    "react-loadable": "^5.4.0",
     "react-scripts": "1.1.4"
   },
   "scripts": {
@@ -18,6 +21,7 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "babel-eslint": "^8.2.3",
     "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-config-standard": "^11.0.0",
