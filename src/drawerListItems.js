@@ -10,13 +10,21 @@ import ZoomInIcon from "@material-ui/icons/ZoomIn";
 
 export const gameRelatedListItems = (
   <div>
-    <ListItem button>
+    <ListItem
+      button
+      component="a"
+      href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3841808/"
+    >
       <ListItemIcon>
         <InfoIcon />
       </ListItemIcon>
       <ListItemText primary="What is NGS?" />
     </ListItem>
-    <ListItem button>
+    <ListItem
+      button
+      component="a"
+      href="https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/what-you-will-learn/what-next-generation-dna-"
+    >
       <ListItemIcon>
         <ZoomInIcon />
       </ListItemIcon>
@@ -27,19 +35,19 @@ export const gameRelatedListItems = (
 
 export const otherListItems = (
   <div>
-    <ListItem button>
+    <ListItem button component="a" href="http://2018.igem.org/Team:McMaster">
       <ListItemIcon>
         <WebIcon />
       </ListItemIcon>
       <ListItemText primary="Our wiki" />
     </ListItem>
-    <ListItem button>
+    <ListItem button component="a" href="https://www.mgem.ca/">
       <ListItemIcon>
         <LaunchIcon />
       </ListItemIcon>
       <ListItemText primary="Our website" />
     </ListItem>
-    <ListItem button>
+    <ListItem button component="a" href="mailto:igem@mcmaster.ca">
       <ListItemIcon>
         <EmailIcon />
       </ListItemIcon>

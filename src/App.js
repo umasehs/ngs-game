@@ -19,7 +19,8 @@ import GetAppIcon from "@material-ui/icons/GetApp";
 import { gameRelatedListItems, otherListItems } from "./drawerListItems";
 import Loadable from "react-loadable";
 import Loading from "./Loading";
-import logo from "./logo.svg";
+import logo from "./projectLogo.png";
+import { SizeMe } from "react-sizeme";
 
 const LoadablePhaserContainer = Loadable({
   loader: () => import("./PhaserContainer"),
@@ -65,11 +66,15 @@ const styles = theme => ({
   },
   appLogo: {
     animation: "App-logo-spin infinite 20s linear",
-    height: "32px"
+    height: "24px",
+    marginLeft: "4px"
   },
   "@keyframes App-logo-spin": {
     from: { transform: "rotate(0deg)" },
     to: { transform: "rotate(360deg)" }
+  },
+  tall: {
+    height: "100%"
   }
 });
 
@@ -203,7 +208,14 @@ class App extends Component {
           </Hidden>
           <main className={classes.content}>
             <div className={classes.toolbar} />
-            <LoadablePhaserContainer />
+            <SizeMe
+              monitorHeight
+              render={props => (
+                <div className={classes.tall}>
+                  <LoadablePhaserContainer {...props} />
+                </div>
+              )}
+            />
           </main>
         </div>
       </React.Fragment>

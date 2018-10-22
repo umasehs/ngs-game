@@ -2,7 +2,21 @@ import React, { Component } from "react";
 import Phaser from "phaser";
 import PropTypes from "prop-types";
 import { withStyles } from "@material-ui/core/styles";
+
+import ProjectLogo from "./ProjectLogo";
+import TeamLogo from "./TeamLogo";
+import Title from "./Title";
+import Intro from "./Intro";
+import FragTitle from "./FragTitle";
+import FragIntro from "./FragIntro";
 import Fragmentation from "./Fragmentation";
+import AmpTitle from "./AmpTitle";
+import AmpIntro from "./AmpIntro";
+import Amplification from "./Amplification";
+import AssemTitle from "./AssemTitle";
+import AssemIntro from "./AssemIntro";
+import Assembly from "./Assembly";
+import Conclusion from "./Conclusion";
 
 const styles = () => ({
   root: {
@@ -11,21 +25,19 @@ const styles = () => ({
   }
 });
 
-class PhaserContainer extends Component {
-  constructor(props) {
-    super(props);
-    this.divElement = React.createRef();
-    this.state = { game: null };
-  }
+let w, h;
+let game;
 
+class PhaserContainer extends Component {
   componentWillUnmount() {
-    this.state.game.destroy(true);
+    game.destroy(true);
   }
 
   componentDidMount() {
-    const w = this.divElement.current.clientWidth;
-    const h = this.divElement.current.clientHeight;
-    localStorage.setItem("w", w, "h", h);
+    w = this.props.size.width;
+    h = this.props.size.height;
+    localStorage.setItem("w", w);
+    localStorage.setItem("h", h);
     // The game will be configured with these settings:
     const config = {
       type: Phaser.AUTO,
@@ -38,28 +50,46 @@ class PhaserContainer extends Component {
           debug: false
         }
       },
-      scene: [Fragmentation],
+      scene: [
+        ProjectLogo,
+        TeamLogo,
+        Title,
+        Intro,
+        FragTitle,
+        FragIntro,
+        Fragmentation,
+        AmpTitle,
+        AmpIntro,
+        Amplification,
+        AssemTitle,
+        AssemIntro,
+        Assembly,
+        Conclusion
+      ],
       parent: "phaser-container",
-      backgroundColor: "0xFAFAFA"
+      backgroundColor: "0xFFFFFF"
     };
 
-    this.setState({ game: new Phaser.Game(config) });
+    game = new Phaser.Game(config);
   }
 
   // Phaser game rendered within HTML div
   render() {
-    return (
-      <div
-        className={this.props.classes.root}
-        id="phaser-container"
-        ref={this.divElement}
-      />
-    );
+    w = this.props.size.width;
+    h = this.props.size.height;
+    localStorage.setItem("w", w);
+    localStorage.setItem("h", h);
+    if (game) {
+      game.resize(w - 10, h * 0.9);
+    }
+
+    return <div className={this.props.classes.root} id="phaser-container" />;
   }
 }
 
 PhaserContainer.propTypes = {
-  classes: PropTypes.object.isRequired
+  classes: PropTypes.object.isRequired,
+  size: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(PhaserContainer);

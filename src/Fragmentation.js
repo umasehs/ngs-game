@@ -7,21 +7,19 @@ import sadPart from "./bombPart.svg";
 import wrongSound from "./wrong.wav";
 import slicingSound from "./slicing.mp3";
 
-// width and height
-let w;
-let h;
-
+let w, h;
 // game state details (loading, scoring, etc.)
 let gameStarted = false;
 const LOAD_DELAY = 5000;
 let loaded = false;
 let score = 0;
-const INIT_LIVES = 3;
+const INIT_LIVES = 5;
 let lives = INIT_LIVES;
+
 let loadingLabel, scoreLabel, livesLabel;
 const SCORE_LOCATION = { x: 10, y: 10 };
 const LIVES_LOCATION = { x: 10, y: 30 };
-const LOADING_LOCATION = { x: 100, y: 70 };
+const LOADING_LOCATION = { x: 10, y: 70 };
 const LABEL_FILL = "0x3f51b5";
 
 // lines drawn by mouse/touch
@@ -33,8 +31,8 @@ const THICKNESS = 2;
 const ALPHA = 1;
 
 // good and bad objects (i.e. fruits and bombs)
-const INIT_NUM_GOOD = 3;
-const INIT_NUM_BAD = 2;
+const INIT_NUM_GOOD = 2;
+const INIT_NUM_BAD = 1;
 const MAX_NUM_OBJECTS = 7;
 let goodObjects, badObjects, goodParts, badParts;
 const SPAWN_RATE = 0.005;
@@ -50,16 +48,20 @@ let wrong;
 let graphics;
 let time;
 let physics;
+let scene;
 
 // launch object upwards from bottom of screen towards middle
 function launchObject(obj) {
   if (obj && obj.body) {
+    const h = getHeight();
+    const w = getWidth();
+
     obj.body.reset(startX(), startY());
     obj.setScale(0.25);
     const velX = (w / 2 - obj.body.center.x) * 0.5 * Math.random();
     obj.setVelocityX(velX);
     obj.setAngularVelocity(velX * 2);
-    obj.setVelocityY(Math.random() * -(0.1 * h) - 0.7 * h);
+    obj.setVelocityY(Math.random() * -(0.1 * h) - 0.75 * h);
     obj.setActive(true);
   }
 }
@@ -79,6 +81,9 @@ function intersectGoodObject(line, goodObject) {
   });
   score++;
   scoreLabel.setText(`Score: ${score}`);
+  const fragHighscore = Math.max(score, localStorage.getItem("fragHighscore"));
+  localStorage.setItem("fragHighscore", fragHighscore);
+  localStorage.setItem("fragScore", score);
 }
 
 // when a line intersects a bad object:
@@ -99,11 +104,13 @@ function intersectBadObject(line, badObject) {
 
 // generate a pseudorandom x-coordinate
 function startX() {
+  const w = getWidth();
   return Math.random() * 0.75 * w + 0.125 * w;
 }
 
 // generate a starting y-coordinate
 function startY() {
+  const h = getHeight();
   return h + 200;
 }
 
@@ -165,7 +172,6 @@ function addGoodParts(goodObject, numParts) {
       time.addEvent({
         delay: FADE_DELAY,
         callback: () => {
-          console.log(goodPart);
           goodPart.alpha -= FADE_AMOUNT;
         },
         repeat
@@ -186,12 +192,13 @@ function loseLives(numLost) {
   lives = Math.max(lives - numLost, 0);
   livesLabel.setText(`Lives remaining: ${lives}`);
   if (lives === 0) {
-    resetGame();
+    nextScene();
   }
 }
 
 // relaunch the objects if they fall too far (i.e. bounce them)
 function bounceObjects() {
+  const h = getHeight();
   goodObjects.children.iterate(function(goodObject) {
     if (goodObject && goodObject.body.center.y > h + 200) {
       goodObject.setActive(false);
@@ -222,6 +229,7 @@ function updateGame() {
     }
   }
 
+  const h = getHeight();
   goodObjects.children.iterate(function(goodObject) {
     // handle intersections of lines and good objects
     if (goodObject && goodObject.active) {
@@ -273,41 +281,43 @@ function updateGame() {
   }
 }
 
-// reset the game state when the player loses
-function resetGame() {
-  const highscore = Math.max(score, localStorage.getItem("highscore"));
-  localStorage.setItem("highscore", highscore);
+// move to the next minigame
+function nextScene() {
+  const fragHighscore = localStorage.getItem("fragHighscore");
   goodObjects.clear(true, true);
   badObjects.clear(true, true);
   enoughObjects = true;
-  scoreLabel.setText(`High Score: ${highscore}`);
+  scoreLabel.setText(`High Score: ${fragHighscore}`);
   loadingLabel.setText(`Game Over! Score: ${score}`);
-  score = 0;
-
+  // score = 0;
+  localStorage.setItem("fragScore", score);
   // after user has absorbed the 'game over' screen,
-  // restart the game
+  // move to the next game
   time.addEvent({
-    delay: FIRE_DELAY * 2,
+    delay: LOAD_DELAY,
     callback: () => {
-      lives = INIT_LIVES;
-      livesLabel.setText(`Lives remaining: ${lives}`);
-      for (let i = 0; i < INIT_NUM_GOOD; i++) {
-        addGoodObject();
-      }
-      for (let i = 0; i < INIT_NUM_BAD; i++) {
-        addBadObject();
-      }
-      enoughObjects = false;
-      loadingLabel.setText("");
+      loadingLabel.setText("Continuing to next minigame...");
+      time.addEvent({
+        delay: LOAD_DELAY,
+        callback: () => {
+          scene.start("AmpTitle");
+        }
+      });
     }
   });
+}
+
+function getHeight() {
+  return parseInt(localStorage.getItem("h"), 10);
+}
+
+function getWidth() {
+  return parseInt(localStorage.getItem("w"), 10);
 }
 
 export default class Fragmentation extends Phaser.Scene {
   constructor() {
     super({ key: "Fragmentation" });
-    w = localStorage.getItem("highscore");
-    h = localStorage.getItem("highscore");
   }
 
   // preload images
@@ -325,8 +335,16 @@ export default class Fragmentation extends Phaser.Scene {
     graphics = this.add.graphics();
     time = this.time;
     physics = this.physics;
+    scene = this.scene;
     slicing = this.sound.add("slicing");
     wrong = this.sound.add("wrong");
+
+    if (!localStorage.getItem("fragHighscore")) {
+      localStorage.setItem("fragHighscore", score);
+    }
+    if (!localStorage.getItem("fragScore")) {
+      localStorage.setItem("fragScore", score);
+    }
 
     // since JavaScript is dynamically typed,
     // we should populate our arrays to save time
@@ -444,27 +462,36 @@ export default class Fragmentation extends Phaser.Scene {
         lines.shift();
       }
     });
-
+    const w = getWidth();
     scoreLabel = this.add.text(
       SCORE_LOCATION.x,
       SCORE_LOCATION.y,
-      "Tips: Click and hold. Get the green ones!"
+      "Slice green, avoid red!",
+      {
+        fill: LABEL_FILL,
+        wordWrap: { width: w - 20, useAdvancedWrap: true }
+      }
     );
-    scoreLabel.setFill(LABEL_FILL);
 
     livesLabel = this.add.text(
       LIVES_LOCATION.x,
       LIVES_LOCATION.y,
-      `Lives remaining: ${lives}`
+      `Lives remaining: ${lives}`,
+      {
+        fill: LABEL_FILL,
+        wordWrap: { width: w - 20, useAdvancedWrap: true }
+      }
     );
-    livesLabel.setFill(LABEL_FILL);
 
     loadingLabel = this.add.text(
       LOADING_LOCATION.x,
       LOADING_LOCATION.y,
-      "Loading..."
+      "Loading...",
+      {
+        fill: LABEL_FILL,
+        wordWrap: { width: w - 20, useAdvancedWrap: true }
+      }
     );
-    loadingLabel.setFill(LABEL_FILL);
 
     // give the physics engine some time to warm up
     time.addEvent({
@@ -480,10 +507,16 @@ export default class Fragmentation extends Phaser.Scene {
   // otherwise just let objects bounce in background
   update() {
     if (gameStarted) {
-      console.log("hi");
       updateGame();
     } else {
       bounceObjects();
+    }
+    if (w !== getWidth() || h !== getHeight()) {
+      w = getWidth();
+      h = getHeight();
+      scoreLabel.setWordWrapWidth(w - 20, true);
+      livesLabel.setWordWrapWidth(w - 20, true);
+      loadingLabel.setWordWrapWidth(w - 20, true);
     }
   }
 }
